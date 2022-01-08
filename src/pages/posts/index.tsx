@@ -18,6 +18,27 @@ interface PostsProps {
   posts: Post[];
 }
 
+interface Response {
+  uid: string;
+  last_publication_date: string;
+  data: {
+    title: [
+      {
+        type: string;
+        text: string;
+        spans?: [];
+      }
+    ];
+    content: [
+      {
+        type: string;
+        text: string;
+        spans?: [];
+      }
+    ];
+  };
+}
+
 export default function Posts({ posts }: PostsProps) {
   return (
     <>
@@ -27,7 +48,7 @@ export default function Posts({ posts }: PostsProps) {
       <main className={styles.container}>
         <div className={styles.posts}>
           {posts.map(post => (
-            <Link key={post.slug} href={`/posts/${post.slug}`}>
+            <Link key={post.slug} href={`/posts/preview/${post.slug}`}>
               <a key={post.slug}>
                 <time>{post.updatedAt}</time>
                 <strong>{post.title}</strong>
@@ -51,12 +72,16 @@ export const getStaticProps: GetStaticProps = async () => {
   });
 
   const posts = documents.results.map(post => {
+    const findParagraph = post as unknown as Response;
+
+    const paragraph =
+      findParagraph.data.content.find(content => content.type === 'paragraph')
+        ?.text ?? '';
+
     return {
       slug: post.uid,
       title: RichText.asText(post.data.title),
-      excerpt:
-        post.data.content.find(content => content.type === 'paragraph')?.text ??
-        '',
+      excerpt: paragraph,
       updatedAt: new Date(post.last_publication_date).toLocaleDateString(
         'pt-BR',
         {
