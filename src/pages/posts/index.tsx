@@ -1,10 +1,22 @@
 import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import * as prismic from '@prismicio/client';
+import { PrismicDocument } from '@prismicio/types';
+import { RichText } from 'prismic-dom';
 import { getPrimiscClient } from '../../services/prismic';
 import styles from './styles.module.scss';
 
-export default function Posts() {
+type Post = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  updatedAt: string;
+};
+interface PostsProps {
+  posts: Post[];
+}
+
+export default function Posts({ posts }: PostsProps) {
   return (
     <>
       <Head>
@@ -12,39 +24,13 @@ export default function Posts() {
       </Head>
       <main className={styles.container}>
         <div className={styles.posts}>
-          <a href="#">
-            <time>29 de janeiro de 2022</time>
-            <strong>Axios - um cliente HTTP Full Stack</strong>
-            <p>
-              Axios é um cliente HTTP baseado em Promises para fazer
-              requisições. Pode ser utilizado tanto no navegador quando no
-              Node.js. É um projeto open source, disponível no Github, tem 77
-              mil stars e 7 mil forks! Muito utilizado e está sendo bem mantido
-              pela comunidade.
-            </p>
-          </a>
-          <a href="#">
-            <time>29 de janeiro de 2022</time>
-            <strong>Axios - um cliente HTTP Full Stack</strong>
-            <p>
-              Axios é um cliente HTTP baseado em Promises para fazer
-              requisições. Pode ser utilizado tanto no navegador quando no
-              Node.js. É um projeto open source, disponível no Github, tem 77
-              mil stars e 7 mil forks! Muito utilizado e está sendo bem mantido
-              pela comunidade.
-            </p>
-          </a>
-          <a href="#">
-            <time>29 de janeiro de 2022</time>
-            <strong>Axios - um cliente HTTP Full Stack</strong>
-            <p>
-              Axios é um cliente HTTP baseado em Promises para fazer
-              requisições. Pode ser utilizado tanto no navegador quando no
-              Node.js. É um projeto open source, disponível no Github, tem 77
-              mil stars e 7 mil forks! Muito utilizado e está sendo bem mantido
-              pela comunidade.
-            </p>
-          </a>
+          {posts.map(post => (
+            <a key={post.slug} href="#">
+              <time>{post.updatedAt}</time>
+              <strong>{post.title}</strong>
+              <p>{post.excerpt}</p>
+            </a>
+          ))}
         </div>
       </main>
     </>
@@ -60,9 +46,25 @@ export const getStaticProps: GetStaticProps = async () => {
     pageSize: 10,
   });
 
-  console.log(JSON.stringify(documents, null, 2));
+  const posts = documents.results.map(post => {
+    return {
+      slug: post.id,
+      title: RichText.asText(post.data.title),
+      excerpt:
+        post.data.content.find(content => content.type === 'paragraph')?.text ??
+        '',
+      updatedAt: new Date(post.last_publication_date).toLocaleDateString(
+        'pt-BR',
+        {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }
+      ),
+    };
+  });
 
   return {
-    props: {},
+    props: { posts },
   };
 };
