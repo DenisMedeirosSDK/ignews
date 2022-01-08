@@ -53,11 +53,7 @@ export default NextAuth({
               )
             ),
             q.Create(q.Collection('users'), { data: { email } }),
-            q.Get(
-              q.Exists(
-                q.Match(q.Index('user_by_email'), q.Casefold(user.email))
-              )
-            )
+            q.Exists(q.Match(q.Index('user_by_email'), q.Casefold(user.email)))
           )
         );
         return true;
