@@ -17,7 +17,6 @@ type User = {
 export default async (request: NextApiRequest, response: NextApiResponse) => {
   if (request.method === 'POST') {
     const session = await getSession({ req: request });
-    console.log(session);
 
     const user = await fauna.query<User>(
       q.Get(q.Match(q.Index('user_by_email'), q.Casefold(session.user.email)))
